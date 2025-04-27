@@ -1,40 +1,60 @@
-// app/camera/index.tsx
 import React, { useState } from 'react';
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet, Button } from 'react-native';
+import { CameraView, useCameraPermissions, CameraType } from 'expo-camera';
+import * as FaceDetector from 'expo-face-detector';
 
-export default function CamUi() {
-  const [facing, setFacing] = useState<CameraType>('front');
+export default function CameraScreen({ navigation }) {
   const [permission, requestPermission] = useCameraPermissions();
-  const router = useRouter();
+  const [faceData, setFaceData] = useState(null);
 
-  if (!permission) return <View />;
-  if (!permission.granted) {
+  if (!permission?.granted) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.message}>We need your permission to access the camera</Text>
+      <View style={styles.centered}>
+        <Text>We need permission to access the camera</Text>
         <Button title="Grant Permission" onPress={requestPermission} />
       </View>
     );
   }
 
-  const toggleFacing = () => {
-    setFacing(prev => (prev === 'back' ? 'front' : 'back'));
+  const handleFacesDetected = ({ faces }) => {
+    if (faces.length > 0) {
+      const face = faces[0]; // Take the first face detected
+      setFaceData(face.bounds);
+    } else {
+      setFaceData(null);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={facing}>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity onPress={toggleFacing} style={styles.button}>
-            <Text style={styles.text}>Flip</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/')} style={styles.button}>
-            <Text style={styles.text}>Home</Text>
-          </TouchableOpacity>
-        </View>
-      </CameraView>
+      <CameraView
+        style={styles.camera}
+        facing={CameraType.front}
+        onFacesDetected={handleFacesDetected}
+        faceDetectorSettings={{
+          mode: FaceDetector.FaceDetectorMode.fast,
+          detectLandmarks: FaceDetector.FaceDetectorLandmarks.none,
+          runClassifications: FaceDetector.FaceDetectorClassifications.none,
+        }}
+      />
+      {faceData && (
+        <View
+          style={[
+            styles.faceBox,
+            {
+              top: faceData.origin.y,
+              left: faceData.origin.x,
+              width: faceData.size.width,
+              height: faceData.size.height,
+            },
+          ]}
+        />
+      )}
+      <View style={styles.overlay}>
+        <Text style={{ color: 'white' }}>
+          {faceData ? 'Face Detected' : 'No Face'}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -42,25 +62,21 @@ export default function CamUi() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   camera: { flex: 1 },
-  buttonContainer: {
+  overlay: {
+    position: 'absolute',
+    bottom: 60,
+    width: '100%',
+    alignItems: 'center',
+  },
+  faceBox: {
+    position: 'absolute',
+    borderColor: 'lime',
+    borderWidth: 2,
+    zIndex: 1000,
+  },
+  centered: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'flex-end',
-    padding: 16,
-    backgroundColor: 'transparent',
-  },
-  button: {
-    backgroundColor: '#00000088',
-    padding: 10,
-    borderRadius: 10,
-  },
-  text: {
-    color: 'white',
-    fontSize: 18,
-  },
-  message: {
-    textAlign: 'center',
-    marginTop: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

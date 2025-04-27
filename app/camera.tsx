@@ -1,54 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Button } from 'react-native';
-import { CameraView, useCameraPermissions, CameraType } from 'expo-camera';
-import * as FaceDetector from 'expo-face-detector';
+import { Camera, useCameraDevices } from 'react-native-vision-camera';
 
-export default function CameraScreen({ navigation }) {
-  const [permission, requestPermission] = useCameraPermissions();
+export default function CameraScreen() {
+  const [hasPermission, setHasPermission] = useState(false);
   const [faceData, setFaceData] = useState(null);
+  const cameraRef = useRef(null);
 
-  if (!permission?.granted) {
+  const devices = useCameraDevices();
+  const frontDevice = devices.find((device) => device.position === 'front'); // Find front camera
+
+  useEffect(() => {
+    const getPermissions = async () => {
+      const status = await Camera.requestCameraPermission();
+      
+      // Correct comparison
+      setHasPermission(status === 'granted');
+    };
+    
+    getPermissions();
+  }, []);
+
+  if (!hasPermission) {
     return (
       <View style={styles.centered}>
         <Text>We need permission to access the camera</Text>
-        <Button title="Grant Permission" onPress={requestPermission} />
+        <Button title="Grant Permission" onPress={Camera.requestCameraPermission} />
       </View>
     );
   }
 
-  const handleFacesDetected = ({ faces }) => {
-    if (faces.length > 0) {
-      const face = faces[0]; // Take the first face detected
-      setFaceData(face.bounds);
-    } else {
-      setFaceData(null);
-    }
-  };
-
   return (
     <View style={styles.container}>
-      <CameraView
-        style={styles.camera}
-        facing={CameraType.front}
-        onFacesDetected={handleFacesDetected}
-        faceDetectorSettings={{
-          mode: FaceDetector.FaceDetectorMode.fast,
-          detectLandmarks: FaceDetector.FaceDetectorLandmarks.none,
-          runClassifications: FaceDetector.FaceDetectorClassifications.none,
-        }}
-      />
-      {faceData && (
-        <View
-          style={[
-            styles.faceBox,
-            {
-              top: faceData.origin.y,
-              left: faceData.origin.x,
-              width: faceData.size.width,
-              height: faceData.size.height,
-            },
-          ]}
+      {frontDevice ? (
+        <Camera
+          style={styles.camera}
+          device={frontDevice}
+          isActive={true}
+          ref={cameraRef}
         />
+      ) : (
+        <Text>Loading camera...</Text>
       )}
       <View style={styles.overlay}>
         <Text style={{ color: 'white' }}>
@@ -67,12 +59,6 @@ const styles = StyleSheet.create({
     bottom: 60,
     width: '100%',
     alignItems: 'center',
-  },
-  faceBox: {
-    position: 'absolute',
-    borderColor: 'lime',
-    borderWidth: 2,
-    zIndex: 1000,
   },
   centered: {
     flex: 1,

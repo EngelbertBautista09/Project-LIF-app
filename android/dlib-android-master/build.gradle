@@ -1,7 +1,11 @@
-apply plugin: 'com.android.library'
+plugins {
+    id 'com.android.library'
+}
 
 android {
-    compileSdkVersion 30
+    namespace 'com.dlib.android'
+    compileSdkVersion 34
+
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 30

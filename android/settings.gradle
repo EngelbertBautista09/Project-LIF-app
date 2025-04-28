@@ -50,6 +50,6 @@ includeBuild(new File(
         .execute(null, rootDir).text.trim()).getParentFile())
 
 // ✅ REPLACE `include ':sdk'` WITH:
-include ':opencv'  
-project(':opencv').projectDir = new File(rootProject.projectDir, '../sdk/java')
-include ':dlib-android-master'
+//include ':opencv'  
+//project(':opencv').projectDir = new File(rootProject.projectDir, 'sdk/java')
+//include ':dlib-android-master'

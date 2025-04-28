@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+// apply plugin: "com.android.library"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
@@ -76,13 +77,14 @@ dependencies {
 
     // ✅ OpenCV (Manually integrated)
     implementation project(':opencv')
+    implementation project(':dlib-android-master')
 
     // ✅ Vision Camera Plugin (for frame processing)
     implementation 'com.mrousavy:react-native-vision-camera:2.13.0'
     implementation 'com.mrousavy:react-native-vision-camera-plugin:2.13.0'
 
     // ✅ Dlib integration (Native bindings for facial landmark detection)
-    implementation fileTree(dir: "libs", include: ["*.aar"])
+    // implementation fileTree(dir: "libs", include: ["*.aar"])
 
     // ✅ Removed Google Services Plugin (since ML Kit is gone)
     
